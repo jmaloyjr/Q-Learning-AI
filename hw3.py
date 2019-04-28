@@ -266,7 +266,10 @@ def learn(env):
 def printOptimalPath(env):
     for node in env[2]:
         if(checkForbiddenNode(node) != True and checkGoalNode(node) != True and checkWallNode(node) != True):
-            print(node.label + " " + findBestAction(node))     
+            if(node.label == "S"):
+                print("1 " + findBestAction(node))
+            else:
+                print(node.label + " " + findBestAction(node))     
     for node in env[1]:
         if(checkForbiddenNode(node) != True and checkGoalNode(node) != True and checkWallNode(node) != True):
             print(node.label + " " + findBestAction(node))   
@@ -295,7 +298,7 @@ def main():
     env = createEnvironment(goalState, forbiddenState, wallState)
 
     # Learn 10,000 times
-    for i in range(10000):
+    for i in range(20000):
         env = learn(env)
         
     # Printing the correct output
