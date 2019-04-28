@@ -181,10 +181,50 @@ def move(aNode):
         else:
             return "W"
 
+# Implementing Q Value Formula
 def calculateQValues(previous, current, action):
     
-    #qVal = (1 - PROBABILITY)(current)
-    print('Hi')
+
+    if(checkGoalNode(current) == False and checkForbiddenNode(current) == False):
+        maxOfCurrent = findBestAction(current)
+
+        if(maxOfCurrent == "N"):
+            maxQVal = current.qN
+        elif(maxOfCurrent == "E"):
+            maxQVal = current.qE
+        elif(maxOfCurrent == "S"):
+            maxQVal = current.qS
+        else:
+            maxQVal = current.qW
+
+        if(action == "N"):
+            previous.qN = ((1 - PROBABILITY) * (previous.qN)) + (PROBABILITY * (REWARD + DISCOUNT_RATE * (maxQVal)))
+        elif(action == "E"):
+            previous.qE = ((1 - PROBABILITY) * (previous.qE)) + (PROBABILITY * (REWARD + DISCOUNT_RATE * (maxQVal)))
+        elif(action == "S"):
+            previous.qS = ((1 - PROBABILITY) * (previous.qS)) + (PROBABILITY * (REWARD + DISCOUNT_RATE * (maxQVal)))
+        else:
+            previous.qW = ((1 - PROBABILITY) * (previous.qW)) + (PROBABILITY * (REWARD + DISCOUNT_RATE * (maxQVal)))
+    else:
+        if(checkForbiddenNode(current) == True):
+            if(action == "N"):
+                previous.qN = ((1 - PROBABILITY) * (previous.qN)) + (PROBABILITY * (FORBIDDEN_STATE_REWARD))
+            elif(action == "E"):
+                previous.qE = ((1 - PROBABILITY) * (previous.qE)) + (PROBABILITY * (FORBIDDEN_STATE_REWARD))
+            elif(action == "S"):
+                previous.qS = ((1 - PROBABILITY) * (previous.qS)) + (PROBABILITY * (FORBIDDEN_STATE_REWARD))
+            else:
+                previous.qW = ((1 - PROBABILITY) * (previous.qW)) + (PROBABILITY * (FORBIDDEN_STATE_REWARD))
+        else:
+            if(action == "N"):
+                previous.qN = ((1 - PROBABILITY) * (previous.qN)) + (PROBABILITY * (GOAL_STATE_REWARD))
+            elif(action == "E"):
+                previous.qE = ((1 - PROBABILITY) * (previous.qE)) + (PROBABILITY * (GOAL_STATE_REWARD))
+            elif(action == "S"):
+                previous.qS = ((1 - PROBABILITY) * (previous.qS)) + (PROBABILITY * (GOAL_STATE_REWARD))
+            else:
+                previous.qW = ((1 - PROBABILITY) * (previous.qW)) + (PROBABILITY * (GOAL_STATE_REWARD))
+
 
 # Function used to learn q values during 10000 iterations
 def learn(env):
@@ -193,7 +233,7 @@ def learn(env):
     currentNode = env[2][0]
     
     #Run until you get to the goal node
-    while(checkGoalNode(currentNode) == False):
+    while(checkGoalNode(currentNode) == False and checkForbiddenNode(currentNode) == False):
 
         # Find next action
         action = move(currentNode)
@@ -208,35 +248,61 @@ def learn(env):
         elif(action == "W" and checkCanMove(currentNode, action) == True):
             nextNode = currentNode.west
         else:
-            nextNode = currentNode
+            continue
         
         #Check if nextNode is wall, if so stay put ai
         if(checkWallNode(nextNode) == True):
             nextNode = currentNode
+            
         
         # Calculate Q Value for previous node based of action
         calculateQValues(currentNode, nextNode, action)
 
         # Reset current node and go again until goal is reached
         currentNode = nextNode
-        print(currentNode.label)
         
     return env    
         
-        
+def printOptimalPath(env):
+    for node in env[2]:
+        if(checkForbiddenNode(node) != True and checkGoalNode(node) != True and checkWallNode(node) != True):
+            print(node.label + " " + findBestAction(node))     
+    for node in env[1]:
+        if(checkForbiddenNode(node) != True and checkGoalNode(node) != True and checkWallNode(node) != True):
+            print(node.label + " " + findBestAction(node))   
+    for node in env[0]:
+        if(checkForbiddenNode(node) != True and checkGoalNode(node) != True and checkWallNode(node) != True):
+            print(node.label + " " + findBestAction(node)) 
+
+def printQValues(env, num):
+    for x in range(3):
+        for y in range(4):
+            if(num != env[x][y].label):
+                continue
+            else:
+                print("NORTH: " + str(env[x][y].qN) + "\n" + "EAST: " + str(env[x][y].qE) + "\n" + "SOUTH: " + str(env[x][y].qS) + "\n" + "WEST: " + str(env[x][y].qW) + "\n")
 
 def main():
     userInput = raw_input("Input a environment in the form # # # <q or p> #\nWhere the first # is the goal state, the second \n# is the forbidden state and the third #\nIs the wall. p or q will determine \nwhich output you would like to recieve. \nIf you choose q the additonal number will show\nthe Q Values for that given place.\n")
-    goalState, forbiddenState, wallState, outputFormat = userInput.split()
 
-    userInput = list(userInput)
-    if(len(userInput) == 5):
-        qValueDisplay = userinput[4]
+    # Unpacking user input values to create environment 
+    try:
+        goalState, forbiddenState, wallState, outputFormat, qValueDisplay = userInput.split()
+    except ValueError:
+        goalState, forbiddenState, wallState, outputFormat= userInput.split()
 
+    # Creating our environment 
     env = createEnvironment(goalState, forbiddenState, wallState)
 
-    for i in range(4):
+    # Learn 10,000 times
+    for i in range(10000):
         env = learn(env)
+        
+    # Printing the correct output
+    if(outputFormat == "p"):
+        printOptimalPath(env)
+    else:
+        printQValues(env, qValueDisplay)
 
 
 if __name__ == "__main__":
