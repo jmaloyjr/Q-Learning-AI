@@ -232,7 +232,7 @@ def learn(env):
     #Each time it will start at the starting node
     currentNode = env[2][0]
     
-    #Run until you get to the goal node
+    #Run until you get to the goal node or forbidden node
     while(checkGoalNode(currentNode) == False and checkForbiddenNode(currentNode) == False):
 
         # Find next action
@@ -248,7 +248,7 @@ def learn(env):
         elif(action == "W" and checkCanMove(currentNode, action) == True):
             nextNode = currentNode.west
         else:
-            continue
+            nextNode = currentNode
         
         #Check if nextNode is wall, if so stay put ai
         if(checkWallNode(nextNode) == True):
@@ -297,7 +297,7 @@ def main():
     # Creating our environment 
     env = createEnvironment(goalState, forbiddenState, wallState)
 
-    # Learn 10,000 times
+    # Learn 20,000 times
     for i in range(20000):
         env = learn(env)
         
